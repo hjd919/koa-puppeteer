@@ -12,18 +12,12 @@ const pdf = require('../core/pdf')
 const render = require('../core/render')
 
 // 创建订单
-route.all('screenshot', async ctx => {
-	// 	const link = "tKR0c2"
-	// const mobile = "18500223089"
-	// const num = 4
-	// const url = "https://www.kuaifaka.com/purchasing?link=" + link
-
+route.all('test', async ctx => {
 	let link = ctx.query.link || ctx.request.body.link || "";
-	let mobile = ctx.query.mobile || ctx.request.body.mobile || "";
-	let num = ctx.query.num || ctx.request.body.num || "";
-	kfkQrcode()
-
-	ctx.body = { status: 200, error: '', message: 'success screenshot', type: 'screenshot', filename: filename };
+	let mobile = ctx.query.mobile || ctx.request.body.mobile || "18500223089";
+	let num = ctx.query.num - 1 || ctx.request.body.num - 1 || "4";
+	let res = await kfkQrcode("https://www.kuaifaka.com/purchasing?link=tKR0c2", mobile, num)
+	ctx.body = { status: 200, error: '', message: 'success screenshot', type: 'screenshot', filename: res };
 
 });
 
