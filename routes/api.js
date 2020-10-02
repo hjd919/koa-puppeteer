@@ -5,17 +5,33 @@ const Router = require('koa-router')
 const route = new Router()
 const uuidv4 = require('uuid/v4');
 
+const kfkQrcode = require('../core/kfkQrcode')
 const screenshot = require('../core/screenshot')
-const fullScreenshot = require('../core/fullScreenshot')
+const fullScreenshot = require('../core/kfkQrcode')
 const pdf = require('../core/pdf')
 const render = require('../core/render')
 
+// 创建订单
+route.all('screenshot', async ctx => {
+	// 	const link = "tKR0c2"
+	// const mobile = "18500223089"
+	// const num = 4
+	// const url = "https://www.kuaifaka.com/purchasing?link=" + link
+
+	let link = ctx.query.link || ctx.request.body.link || "";
+	let mobile = ctx.query.mobile || ctx.request.body.mobile || "";
+	let num = ctx.query.num || ctx.request.body.num || "";
+	kfkQrcode()
+
+	ctx.body = { status: 200, error: '', message: 'success screenshot', type: 'screenshot', filename: filename };
+
+});
 
 
-route.use(async (ctx,next)=>{
+route.use(async (ctx, next) => {
 	// Assert url 
 	let url = ctx.query.url || ctx.request.body.url;
-	ctx.assert(url,400,"Url can't be null");
+	ctx.assert(url, 400, "Url can't be null");
 	// set url
 	global.url = url;
 	// 如果监听公网IP地址则最好启用 `ticket` 验证，防止未授权使用
@@ -25,39 +41,39 @@ route.use(async (ctx,next)=>{
 
 })
 
-route.all('screenshot',async ctx => {
+route.all('screenshot', async ctx => {
 	// Screenshot
 	// width default 1920 height default 1080
 	let width = ctx.query.width || ctx.request.body.width || 1920;
 	let height = ctx.query.height || ctx.request.body.height || 1080;
 	let filename = `${uuidv4()}.png`;
-	screenshot(url,parseInt(width),parseInt(height),filename)
-	ctx.body = {status: 200 ,error: '',message:'success screenshot',type:'screenshot',filename:filename};
+	screenshot(url, parseInt(width), parseInt(height), filename)
+	ctx.body = { status: 200, error: '', message: 'success screenshot', type: 'screenshot', filename: filename };
 
 });
 
-route.all('screenshot/full',async ctx => {
+route.all('screenshot/full', async ctx => {
 	// Full screenshot
 	let filename = `${uuidv4()}.png`;
-	fullScreenshot(url,filename)
-	ctx.body = {status: 200 ,error: '',message:'success fullscreenshot',type:'fullscreenshot',filename:filename};
+	fullScreenshot(url, filename)
+	ctx.body = { status: 200, error: '', message: 'success fullscreenshot', type: 'fullscreenshot', filename: filename };
 
 });
 
-route.all('pdf',async ctx => {
+route.all('pdf', async ctx => {
 	// PDF
 	let format = ctx.query.format || ctx.request.body.format;
 	let filename = `${uuidv4()}.pdf`;
 	// width default 1920 height default 1080
 	let width = ctx.query.width || ctx.request.body.width || 1920;
 	let height = ctx.query.height || ctx.request.body.height || 1080;
-	pdf(url,parseInt(width),parseInt(height),filename,format)
-	ctx.body = {status: 200 ,error: '',message:'success pdf',type:'pdf',filename:filename};
+	pdf(url, parseInt(width), parseInt(height), filename, format)
+	ctx.body = { status: 200, error: '', message: 'success pdf', type: 'pdf', filename: filename };
 
 });
 
 
-route.all('render',async ctx => {
+route.all('render', async ctx => {
 	// Render
 	// await page load
 	let html = await render(url);
