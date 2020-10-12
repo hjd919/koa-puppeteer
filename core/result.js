@@ -15,8 +15,6 @@ const blockedResourceTypes = [
     'imageset',
 ];
 
-const maxNum = 2
-
 async function fullScreenshot(url, mobile, num) {
     const browser = await puppeteer.launch({
         ignoreHTTPSErrors: true,
@@ -56,59 +54,17 @@ async function fullScreenshot(url, mobile, num) {
             waitUntil: ['domcontentloaded', 'load', 'networkidle0']
         });
 
-        const elem = await page.$('div');
-        const boundingBox = await elem.boundingBox();
-        await page.mouse.move(
-            boundingBox.x + boundingBox.width / 2,
-            boundingBox.y + boundingBox.height / 2
-        );
-        await page.mouse.wheel({ deltaY: 1000 })
-
-        await page.click('#purchasing_sp > div.ure_info_box > div.ure_info > div:nth-child(1) > div.input > input');
-        await page.keyboard.type(mobile);
-        for (let index = 0; index < num; index++) {
-            await page.click('#purchasing_sp > div.ford > div > div.shuliang_box > div:nth-child(3)')
-        }
-        await page.evaluate(() => {
-            document.querySelector('.qued_btn').click()
-            return ""
-        });
-
-        let selector
-        // await page.waitFor(500);
-        selector = '#last_order_box > div.queding_box > div > span:nth-child(2)'
-        await page.waitForSelector(selector);
-        await page.click(selector)
-
-        await page.waitFor(2000);
-        selector = '#confirm_order_number > div.btn_box > button'
-        await page.waitForSelector(selector);
-        await page.click(selector)
-
-        const finalRequest = await page.waitForRequest(request => request.url().indexOf("qrCode") > -1 && request.method() === 'GET');
+        const finalRequest = await page.waitForResponse(request => request.url().indexOf("cards_query") > -1 && request.method() === 'GET');
 
         const cookie = await page.cookies()
         cookie.setCookie(mobile, cookie)
 
-        // 启动另一个浏览器去监听状态
-        // wait for pay
-        // let curNum = 0
-        // setTimeout(function(){
-
-        // },3000)
-        // if (curNum > maxNum) {
-        //     page.close();
-        //     browser.close();
-        // }
-        // page.close();
-        // browser.close();
-        return { url: finalRequest.url(), page, browser };
+        page.close();
+        browser.close();
+        return finalRequest.url();
     } catch (e) {
         console.error("errcatch=", e);
     }
 }
 
-function closePup() {
-
-}
 module.exports = fullScreenshot;

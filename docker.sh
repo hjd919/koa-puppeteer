@@ -11,4 +11,4 @@
 # run images
 # 务必在当起目录下，也就是git clone的地方
 
-docker run -d --name puppeteer -p 127.0.0.1:3200:3200 -v $PWD:/app/  pup
+docker run --rm --name puppeteer -p 127.0.0.1:3200:3200 -v $PWD:/app/  pup
