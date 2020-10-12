@@ -16,6 +16,16 @@ route.all('test', async ctx => {
 	let link = ctx.query.link || ctx.request.body.link || "";
 	let mobile = ctx.query.mobile || ctx.request.body.mobile || "18500223089";
 	let num = ctx.query.num - 1 || ctx.request.body.num - 1 || "4";
+	let { url, page, browser } = await kfkQrcode("https://www.kuaifaka.com/purchasing?link=tKR0c2", mobile, num)
+
+	ctx.body = { status: 200, error: '', url: url };
+});
+
+// 获取
+route.all('result', async ctx => {
+	let link = ctx.query.link || ctx.request.body.link || "";
+	let mobile = ctx.query.mobile || ctx.request.body.mobile || "18500223089";
+	let num = ctx.query.num - 1 || ctx.request.body.num - 1 || "4";
 	let res = await kfkQrcode("https://www.kuaifaka.com/purchasing?link=tKR0c2", mobile, num)
 	ctx.body = { status: 200, error: '', message: 'success screenshot', type: 'screenshot', filename: res };
 });
