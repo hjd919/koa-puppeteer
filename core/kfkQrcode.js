@@ -4,6 +4,12 @@
 const puppeteer = require('puppeteer');
 const cookie = require('./cookie');
 
+const execArgv = process.execArgv
+const argv = process.argv
+console.log("execArgv", execArgv)
+console.log("argv", argv)
+const url = argv[2]
+
 const blockedResourceTypes = [
     'image',
     'media',
@@ -17,7 +23,8 @@ const blockedResourceTypes = [
 
 const maxNum = 2
 
-async function fullScreenshot(url, mobile, num) {
+async function fullScreenshot(url) {
+    const num = 5
     const browser = await puppeteer.launch({
         ignoreHTTPSErrors: true,
         headless: false,
@@ -48,8 +55,8 @@ async function fullScreenshot(url, mobile, num) {
     });
     page.setUserAgent("Mozilla/6.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.0 Safari/537.36")
 
-    const cookieObj = await cookie.getCookie()
-    await page.setCookie(...cookieObj)
+    // const cookieObj = await cookie.getCookie()
+    // await page.setCookie(...cookieObj)
 
     try {
         await page.goto(url, {
@@ -65,6 +72,7 @@ async function fullScreenshot(url, mobile, num) {
         await page.mouse.wheel({ deltaY: 1000 })
 
         await page.click('#purchasing_sp > div.ure_info_box > div.ure_info > div:nth-child(1) > div.input > input');
+        const mobile = await waitMsg()
         await page.keyboard.type(mobile);
         for (let index = 0; index < num; index++) {
             await page.click('#purchasing_sp > div.ford > div > div.shuliang_box > div:nth-child(3)')
@@ -108,7 +116,14 @@ async function fullScreenshot(url, mobile, num) {
     }
 }
 
-function closePup() {
-
+async function waitMsg() {
+    return new Promise((resolve) => {
+        process.on('message', (str) => {
+            console.log("process.on('message'==", str)
+            resolve(str)
+        });
+    })
 }
-module.exports = fullScreenshot;
+
+fullScreenshot(url)
+// module.exports = fullScreenshot;

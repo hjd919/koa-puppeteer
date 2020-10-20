@@ -1,6 +1,7 @@
 
 'use strict';
 
+
 const Router = require('koa-router')
 const route = new Router()
 const uuidv4 = require('uuid/v4');
@@ -31,7 +32,7 @@ route.all('result', async ctx => {
 });
 
 // 获取码
-route.all('result', async ctx => {
+route.all('result2', async ctx => {
 	let link = ctx.query.link || ctx.request.body.link || "";
 	let mobile = ctx.query.mobile || ctx.request.body.mobile || "18500223089";
 	let num = ctx.query.num - 1 || ctx.request.body.num - 1 || "4";
@@ -92,6 +93,33 @@ route.all('render', async ctx => {
 	ctx.body = html;
 
 });
+
+route.all('/aa', async ctx => {
+	console.log("222")
+	ctx.body = '欢迎'
+})
+
+route.all('/', async ctx => {
+	console.log("222")
+	ctx.body = '欢迎'
+})
+
+route.all('/websocket/:id', async ctx => {
+	console.log("111")
+	let t = setInterval(function () {
+		let n = Math.random()
+		if (n > 0.3) {
+			let msg = JSON.stringify({ 'id': ctx.params.id, 'n': n })
+			ctx.websocket.send(msg)
+		}
+	}, 1000)
+	ctx.websocket.on('message', msg => {
+		console.log('前端发过来的数据：', msg)
+	})
+	ctx.websocket.on('close', () => {
+		console.log('前端关闭了websocket')
+	})
+})
 
 
 module.exports = route;

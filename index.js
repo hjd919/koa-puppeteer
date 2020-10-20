@@ -7,8 +7,11 @@
 'use strict';
 
 
+const websockify = require('koa-websocket')
+
 const Koa = require('koa')
-const app = new Koa()
+// const app = new Koa()
+const app = websockify(new Koa())
 const bodyparser = require('koa-bodyparser');
 const Router = require('koa-router')
 const router = new Router()
@@ -19,6 +22,9 @@ const api = require("./routes/api")
 // middlewares
 app.use(bodyparser());
 
+app.ws.use((ctx, next) => {
+	return next(ctx)
+  })
 
 // request log
 app.use(async (ctx, next) => {
@@ -56,8 +62,13 @@ app.on('error', (err, ctx) => {
 });
 
 // routes
-router.use('/',api.routes(),api.allowedMethods());
-app.use(router.routes()).use(router.allowedMethods());
+// router.use('/',api.routes(),api.allowedMethods());
+// app.use(router.routes()).use(router.allowedMethods());
+
+app
+.ws
+.use(api.routes())
+.use(api.allowedMethods())
 
 app.listen(3200,'0.0.0.0',async ()=> {
 	
