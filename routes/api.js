@@ -5,40 +5,43 @@
 const Router = require('koa-router')
 const route = new Router()
 const uuidv4 = require('uuid/v4');
+const child_process = require('child_process');
 
-const kfkQrcode = require('../core/kfkQrcode')
 const screenshot = require('../core/screenshot')
-const fullScreenshot = require('../core/kfkQrcode')
 const pdf = require('../core/pdf')
 const render = require('../core/render')
+const redis = require('../core/redis')
 
 // 创建订单
-route.all('test', async ctx => {
+route.all('create_order', async ctx => {
 	let link = ctx.query.link || ctx.request.body.link || "";
 	let mobile = ctx.query.mobile || ctx.request.body.mobile || "18500223089";
-	let num = ctx.query.num - 1 || ctx.request.body.num - 1 || "4";
-	let { url, page, browser } = await kfkQrcode("https://www.kuaifaka.com/purchasing?link=tKR0c2", mobile, num)
+	let num = ctx.query.num || ctx.request.body.num || "5";
+	// let { url, page, browser } = await kfkQrcode("tKR0c2", mobile, num)
+	const args = ["tKR0c2", mobile, num]
+	const worker = child_process.fork("./kfkQrcode.js", args)
+	worker.on('message', (m) => {
+		console.log('父进程收到消息', m);
+	});
+	worker.send({ hello: 'world' });
 
-	ctx.body = { status: 200, error: '', url: url };
+	ctx.body = { status: 200, error: '', url: args };
 });
 
 // 获取
-route.all('result', async ctx => {
-	let link = ctx.query.link || ctx.request.body.link || "";
-	let mobile = ctx.query.mobile || ctx.request.body.mobile || "18500223089";
-	let num = ctx.query.num - 1 || ctx.request.body.num - 1 || "4";
-	let res = await kfkQrcode("https://www.kuaifaka.com/purchasing?link=tKR0c2", mobile, num)
-	ctx.body = { status: 200, error: '', message: 'success screenshot', type: 'screenshot', filename: res };
+route.all('test', async ctx => {
+	const qrcode = await redis.getAsync("qrcode")
+	ctx.body = { status: 200, error: '', data: { qrcode } };
 });
 
-// 获取码
-route.all('result2', async ctx => {
-	let link = ctx.query.link || ctx.request.body.link || "";
-	let mobile = ctx.query.mobile || ctx.request.body.mobile || "18500223089";
-	let num = ctx.query.num - 1 || ctx.request.body.num - 1 || "4";
-	let res = await kfkQrcode("https://www.kuaifaka.com/purchasing?link=tKR0c2", mobile, num)
-	ctx.body = { status: 200, error: '', message: 'success screenshot', type: 'screenshot', filename: res };
-});
+// // 获取码
+// route.all('result2', async ctx => {
+// 	let link = ctx.query.link || ctx.request.body.link || "";
+// 	let mobile = ctx.query.mobile || ctx.request.body.mobile || "18500223089";
+// 	let num = ctx.query.num - 1 || ctx.request.body.num - 1 || "4";
+// 	let res = await kfkQrcode("https://www.kuaifaka.com/purchasing?link=tKR0c2", mobile, num)
+// 	ctx.body = { status: 200, error: '', message: 'success screenshot', type: 'screenshot', filename: res };
+// });
 
 route.use(async (ctx, next) => {
 	// Assert url 

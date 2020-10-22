@@ -7,11 +7,8 @@
 'use strict';
 
 
-const websockify = require('koa-websocket')
-
 const Koa = require('koa')
-// const app = new Koa()
-const app = websockify(new Koa())
+const app = new Koa()
 const bodyparser = require('koa-bodyparser');
 const Router = require('koa-router')
 const router = new Router()
@@ -22,15 +19,11 @@ const api = require("./routes/api")
 // middlewares
 app.use(bodyparser());
 
-app.ws.use((ctx, next) => {
-	return next(ctx)
-  })
-
 // request log
 app.use(async (ctx, next) => {
 	await next();
-	const time = ctx.response.get('X-Response-Time'); 
-	console.log(`[puppeteer.app] DEBUG: ${ ctx.ip } ${ctx.method} ${ctx.url} - ${ctx.status} ${ctx.length} ${time} ${ctx.headers['user-agent']}`);
+	const time = ctx.response.get('X-Response-Time');
+	console.log(`[puppeteer.app] DEBUG: ${ctx.ip} ${ctx.method} ${ctx.url} - ${ctx.status} ${ctx.length} ${time} ${ctx.headers['user-agent']}`);
 });
 
 // middlewares
@@ -40,8 +33,8 @@ app.use(async (ctx, next) => {
 	await next();
 	const ms = Date.now() - start;
 	ctx.set('X-Response-Time', `${ms}ms`);
-	ctx.set('X-Powered-By','Koajs');
-	ctx.set('X-Engine-By','Puppeteer');
+	ctx.set('X-Powered-By', 'Koajs');
+	ctx.set('X-Engine-By', 'Puppeteer');
 
 });
 
@@ -51,7 +44,7 @@ app.use(async (ctx, next) => {
 		await next();
 	} catch (err) {
 		ctx.status = err.statusCode || err.status || 500;
-		ctx.body = { status: ctx.status ,error: err.name,message: err.message };
+		ctx.body = { status: ctx.status, error: err.name, message: err.message };
 		ctx.app.emit("error", err, ctx);
 	}
 });
@@ -62,16 +55,11 @@ app.on('error', (err, ctx) => {
 });
 
 // routes
-// router.use('/',api.routes(),api.allowedMethods());
-// app.use(router.routes()).use(router.allowedMethods());
+router.use('/', api.routes(), api.allowedMethods());
+app.use(router.routes()).use(router.allowedMethods());
 
-app
-.ws
-.use(api.routes())
-.use(api.allowedMethods())
+app.listen(3200, '0.0.0.0', async () => {
 
-app.listen(3200,'0.0.0.0',async ()=> {
-	
 	console.log(`[puppeteer.app] DEBUG: Puppeteer App start in http://0.0.0.0:3200`)
 });
 
