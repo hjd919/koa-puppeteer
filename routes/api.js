@@ -15,7 +15,7 @@ const redis = require('../core/redis')
 route.all('create_order', async ctx => {
 	let link = ctx.query.link || ctx.request.body.link || "";
 	let mobile = ctx.query.mobile || ctx.request.body.mobile || "18500223089";
-	let num = ctx.query.num || ctx.request.body.num || "5";
+	let num = ctx.query.num || ctx.request.body.num || "1";
 	// let { url, page, browser } = await kfkQrcode("tKR0c2", mobile, num)
 	const args = ["tKR0c2", mobile, num]
 	const worker = child_process.fork("./kfkQrcode.js", args)
@@ -33,8 +33,8 @@ route.all('create_order', async ctx => {
 	};
 });
 
-// 获取
-route.all('test', async ctx => {
+// 判断支付是否成功
+route.all('get_order_state', async ctx => {
 	let mobile = ctx.query.mobile || ctx.request.body.mobile || "18500223089";
 
 	const qrcode = await redis.getAsync(`qrcode:${mobile}`)

@@ -14,16 +14,15 @@ const argv = process.argv
 const link = argv[2]
 const mobile = argv[3]
 const num = argv[4]
-// console.log('argv', argv)
-
 // process.on('message', (m) => {
 //     console.log('子进程收到消息', m);
 // });
 
 // 使父进程输出: 父进程收到消息 { foo: 'bar', baz: null }
 process.send({
-    foo: 'bar',
-    baz: NaN
+    link,
+    mobile,
+    num
 });
 
 const blockedResourceTypes = [
@@ -36,8 +35,6 @@ const blockedResourceTypes = [
     'csp_report',
     'imageset',
 ];
-
-const maxNum = 2
 
 fullScreenshot(link, mobile, num)
 async function fullScreenshot(link, mobile, num) {
@@ -76,8 +73,6 @@ async function fullScreenshot(link, mobile, num) {
     // 自定义ua
     page.setUserAgent("Mozilla/6.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.0 Safari/537.36")
 
-
-
     try {
         let url = "https://www.kuaifaka.com/purchasing?link=" + link
         await page.goto(url, {
@@ -98,11 +93,14 @@ async function fullScreenshot(link, mobile, num) {
         await page.keyboard.type(mobile);
 
         // 优化输入
-        // await page.click("#purchasing_sp > div.ford > div > div.shuliang_box > div.input")
-        // await page.keyboard.type(num, { delay: 100 });
-        for (let index = 1; index < num; index++) {
-            await page.click('#purchasing_sp > div.ford > div > div.shuliang_box > div:nth-child(3)')
-        }
+        await page.click("#purchasing_sp > div.ford > div > div.shuliang_box > div.input")
+        await page.keyboard.press('Backspace');
+        await page.keyboard.type(num, {
+            delay: 100
+        });
+        // for (let index = 1; index < num; index++) {
+        //     await page.click('#purchasing_sp > div.ford > div > div.shuliang_box > div:nth-child(3)')
+        // }
 
         await page.evaluate(() => {
             document.querySelector('.qued_btn').click()
@@ -128,7 +126,7 @@ async function fullScreenshot(link, mobile, num) {
         redis.client.setex(`qrcode:${mobile}`, 9 * 60, qrcode);
 
         const eachTime = 3 * 1000
-        const totalTime = 9 * 60 * 1000
+        const totalTime = 4 * 60 * 1000
         // const eachTime = 2 * 1000
         // const totalTime = 4 * 1000
         let totalNum = parseInt(totalTime / eachTime)
@@ -164,7 +162,11 @@ async function fullScreenshot(link, mobile, num) {
         page.close();
         browser.close();
     } catch (e) {
-        console.error("errcatch=", e);
+        process.send({
+            e
+        });
+        page.close();
+        browser.close();
     }
 }
 
