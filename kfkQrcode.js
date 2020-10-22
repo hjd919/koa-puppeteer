@@ -1,4 +1,3 @@
-
 'use strict';
 
 const puppeteer = require('puppeteer');
@@ -17,12 +16,15 @@ const mobile = argv[3]
 const num = argv[4]
 // console.log('argv', argv)
 
-process.on('message', (m) => {
-    console.log('子进程收到消息', m);
-});
+// process.on('message', (m) => {
+//     console.log('子进程收到消息', m);
+// });
 
 // 使父进程输出: 父进程收到消息 { foo: 'bar', baz: null }
-process.send({ foo: 'bar', baz: NaN });
+process.send({
+    foo: 'bar',
+    baz: NaN
+});
 
 const blockedResourceTypes = [
     'image',
@@ -39,7 +41,6 @@ const maxNum = 2
 
 fullScreenshot(link, mobile, num)
 async function fullScreenshot(link, mobile, num) {
-    process.send({ test: "1" });
     const browser = await puppeteer.launch({
         ignoreHTTPSErrors: true,
         headless: false,
@@ -49,7 +50,7 @@ async function fullScreenshot(link, mobile, num) {
             '--no-sandbox',
             '--disable-setuid-sandbox',
             '--disable-accelerated-2d-canvas', // canvas渲染
-            '--disable-gpu',                   // GPU硬件加速
+            '--disable-gpu', // GPU硬件加速
             '--disable-dev-shm-usage',
             '--enable-features=NetworkService',
             '-—disable-dev-tools'
@@ -89,7 +90,9 @@ async function fullScreenshot(link, mobile, num) {
             boundingBox.x + boundingBox.width / 2,
             boundingBox.y + boundingBox.height / 2
         );
-        await page.mouse.wheel({ deltaY: 1000 })
+        await page.mouse.wheel({
+            deltaY: 1000
+        })
 
         await page.click('#purchasing_sp > div.ure_info_box > div.ure_info > div:nth-child(1) > div.input > input');
         await page.keyboard.type(mobile);
@@ -119,44 +122,47 @@ async function fullScreenshot(link, mobile, num) {
 
         const finalRequest = await page.waitForRequest(request => request.url().indexOf("qrCode") > -1 && request.method() === 'GET');
         const qrcode = finalRequest.url()
-        process.send({ qrcode: "qrcode" });
-        redis.client.set("qrcode", qrcode);
+        process.send({
+            qrcode
+        });
+        redis.client.setex(`qrcode:${mobile}`, 9 * 60, qrcode);
 
-        // let ispaid = false
-        const payres = await page.waitForResponse(
-            async response => {
-                if (response.url().indexOf("get_order_state") > -1 &&
-                    response.status() === 200) {
-                    let jsonRes = await response.json()
-                    process.send({ jsonRes: jsonRes });
-                    if (jsonRes.data.code == 1) {
-                        return true
-                    }
-                    return false
-                } else {
-                    return false
-                }
-                // return response.url().indexOf("get_order_state") > -1 &&
-                //     response.status() === 200
+        const eachTime = 3 * 1000
+        const totalTime = 9 * 60 * 1000
+        // const eachTime = 2 * 1000
+        // const totalTime = 4 * 1000
+        let totalNum = parseInt(totalTime / eachTime)
+        let paid = false
+        for (let index = 0; index < totalNum; index++) {
+            const payres = await page.waitForResponse(response => response.url().indexOf("get_order_state") > -1 && response.status() === 200);
+            const json = await payres.json()
+            if (json.data.code == 0) {
+                paid = true
+                redis.client.setex(`paid:${mobile}`, 9 * 60, "1");
+                break
             }
-        );
+            process.send({
+                index,
+                json
+            });
+        }
 
-        process.send({ pay: "ok" });
+        process.send({
+            paid
+        });
 
-        // setTimeout(((page, browser) => {
-        //     page.close();
-        //     browser.close();
-        // })(page, browser), 5000)
-        // 启动另一个浏览器去监听状态
-        // wait for pay
-        // let curNum = 0
-        // setTimeout(function(){
-        // },3000)
-        // if (curNum > maxNum) {
-        //     page.close();
-        //     browser.close();
-        // }
-        // return { url: finalRequest.url(), page, browser };
+        if (!paid) {
+            page.close();
+            browser.close();
+            return
+        }
+
+        const cardsqueryres = await page.waitForResponse(response => response.url().indexOf("cards_query") > -1 && response.status() === 200);
+        let cardsquery = await cardsqueryres.text()
+        redis.client.set(`cards_query:${mobile}`, cardsquery);
+
+        page.close();
+        browser.close();
     } catch (e) {
         console.error("errcatch=", e);
     }
