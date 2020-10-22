@@ -1,4 +1,3 @@
-
 'use strict';
 
 
@@ -27,7 +26,7 @@ function onMessage(worker) {
 route.all('create_order', async ctx => {
 	let link = ctx.query.link || ctx.request.body.link || "";
 	let mobile = ctx.query.mobile || ctx.request.body.mobile || "18500223089";
-	let num = ctx.query.num || ctx.request.body.num || "5";
+	let num = ctx.query.num || ctx.request.body.num || "1";
 	// let { url, page, browser } = await kfkQrcode("tKR0c2", mobile, num)
 	const args = ["tKR0c2", mobile, num]
 	const worker = child_process.fork("./kfkQrcode.js", args)
@@ -36,10 +35,22 @@ route.all('create_order', async ctx => {
 	ctx.body = { status: 200, error: '', qrcode: qrcode };
 });
 
-// 获取
-route.all('test', async ctx => {
-	const qrcode = await redis.getAsync("qrcode")
-	ctx.body = { status: 200, error: '', data: { qrcode } };
+// 判断支付是否成功
+route.all('get_order_state', async ctx => {
+	let mobile = ctx.query.mobile || ctx.request.body.mobile || "18500223089";
+
+	const qrcode = await redis.getAsync(`qrcode:${mobile}`)
+	const paid = await redis.getAsync(`paid:${mobile}`)
+	const cards_query = await redis.getAsync(`cards_query:${mobile}`)
+	ctx.body = {
+		status: 200,
+		error: '',
+		data: {
+			qrcode,
+			paid,
+			cards_query
+		}
+	};
 });
 
 // // 获取码
@@ -71,7 +82,13 @@ route.all('screenshot', async ctx => {
 	let height = ctx.query.height || ctx.request.body.height || 1080;
 	let filename = `${uuidv4()}.png`;
 	screenshot(url, parseInt(width), parseInt(height), filename)
-	ctx.body = { status: 200, error: '', message: 'success screenshot', type: 'screenshot', filename: filename };
+	ctx.body = {
+		status: 200,
+		error: '',
+		message: 'success screenshot',
+		type: 'screenshot',
+		filename: filename
+	};
 
 });
 
@@ -79,7 +96,13 @@ route.all('screenshot/full', async ctx => {
 	// Full screenshot
 	let filename = `${uuidv4()}.png`;
 	fullScreenshot(url, filename)
-	ctx.body = { status: 200, error: '', message: 'success fullscreenshot', type: 'fullscreenshot', filename: filename };
+	ctx.body = {
+		status: 200,
+		error: '',
+		message: 'success fullscreenshot',
+		type: 'fullscreenshot',
+		filename: filename
+	};
 
 });
 
@@ -91,7 +114,13 @@ route.all('pdf', async ctx => {
 	let width = ctx.query.width || ctx.request.body.width || 1920;
 	let height = ctx.query.height || ctx.request.body.height || 1080;
 	pdf(url, parseInt(width), parseInt(height), filename, format)
-	ctx.body = { status: 200, error: '', message: 'success pdf', type: 'pdf', filename: filename };
+	ctx.body = {
+		status: 200,
+		error: '',
+		message: 'success pdf',
+		type: 'pdf',
+		filename: filename
+	};
 
 });
 
@@ -105,35 +134,5 @@ route.all('render', async ctx => {
 
 });
 
-route.all('/aa', async ctx => {
-	console.log("222")
-	ctx.body = '欢迎'
-})
-
-route.all('/', async ctx => {
-	console.log("222")
-	ctx.body = '欢迎'
-})
-
-route.all('/websocket/:id', async ctx => {
-	console.log("111")
-	let t = setInterval(function () {
-		let n = Math.random()
-		if (n > 0.3) {
-			let msg = JSON.stringify({ 'id': ctx.params.id, 'n': n })
-			ctx.websocket.send(msg)
-		}
-	}, 1000)
-	ctx.websocket.on('message', msg => {
-		console.log('前端发过来的数据：', msg)
-	})
-	ctx.websocket.on('close', () => {
-		console.log('前端关闭了websocket')
-	})
-})
-
 
 module.exports = route;
-
-
-
