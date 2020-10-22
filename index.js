@@ -55,7 +55,7 @@ app.on('error', (err, ctx) => {
 });
 
 // routes
-router.use('/', api.routes(), api.allowedMethods());
+router.use('/api', api.routes(), api.allowedMethods());
 app.use(router.routes()).use(router.allowedMethods());
 
 app.listen(3200, '0.0.0.0', async () => {

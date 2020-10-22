@@ -12,6 +12,17 @@ const pdf = require('../core/pdf')
 const render = require('../core/render')
 const redis = require('../core/redis')
 
+function onMessage(worker) {
+	return new Promise((resolve) => {
+		worker.on('message', (m) => {
+			if (m.qrcode) {
+				resolve(m.qrcode)
+			}
+			console.log('父进程收到消息', m);
+		});
+	})
+}
+
 // 创建订单
 route.all('create_order', async ctx => {
 	let link = ctx.query.link || ctx.request.body.link || "";
@@ -20,12 +31,9 @@ route.all('create_order', async ctx => {
 	// let { url, page, browser } = await kfkQrcode("tKR0c2", mobile, num)
 	const args = ["tKR0c2", mobile, num]
 	const worker = child_process.fork("./kfkQrcode.js", args)
-	worker.on('message', (m) => {
-		console.log('父进程收到消息', m);
-	});
-	worker.send({ hello: 'world' });
+	const qrcode = await onMessage(worker)
 
-	ctx.body = { status: 200, error: '', url: args };
+	ctx.body = { status: 200, error: '', qrcode: qrcode };
 });
 
 // 获取
