@@ -23,35 +23,57 @@ function onMessage(worker) {
 }
 
 // 创建订单
-route.all('create_order', async ctx => {
-	let link = ctx.query.link || ctx.request.body.link || "";
+route.all('/create_order', async ctx => {
+	let link = ctx.query.link || ctx.request.body.link || "tKR0c2";
 	let mobile = ctx.query.mobile || ctx.request.body.mobile || "18500223089";
 	let num = ctx.query.num || ctx.request.body.num || "1";
 	// let { url, page, browser } = await kfkQrcode("tKR0c2", mobile, num)
-	const args = ["tKR0c2", mobile, num]
+	const args = [link, mobile, num]
 	const worker = child_process.fork("./kfkQrcode.js", args)
-	const qrcode = await onMessage(worker)
-
-	ctx.body = { status: 200, error: '', qrcode: qrcode };
+	await onMessage(worker)
+	ctx.body = { code: 0 };
 });
 
 // 判断支付是否成功
-route.all('get_order_state', async ctx => {
+route.all('/get_qrcode', async ctx => {
 	let mobile = ctx.query.mobile || ctx.request.body.mobile || "18500223089";
-
 	const qrcode = await redis.getAsync(`qrcode:${mobile}`)
-	const paid = await redis.getAsync(`paid:${mobile}`)
-	const cards_query = await redis.getAsync(`cards_query:${mobile}`)
+	// const paidDataArr = paidData.split("|")
 	ctx.body = {
-		status: 200,
-		error: '',
+		code: 0,
 		data: {
-			qrcode,
-			paid,
-			cards_query
+			qrcode
 		}
 	};
 });
+
+// 判断支付是否成功
+route.all('/get_order_state', async ctx => {
+	let mobile = ctx.query.mobile || ctx.request.body.mobile || "18500223089";
+	const paidData = await redis.getAsync(`paid:${mobile}`)
+	const paidDataArr = paidData.split("|")
+	ctx.body = {
+		code: 0,
+		data: {
+			paid: paidDataArr[1],
+			orderNum: paidDataArr[0],
+		}
+	};
+});
+
+// 获取支付结果
+route.all('/cards_query', async ctx => {
+	let mobile = ctx.query.mobile || ctx.request.body.mobile || "18500223089";
+
+	const cards_query = await redis.getAsync(`cards_query:${mobile}`)
+	console.log(cards_query)
+	let cardinfo = JSON.parse(cards_query)
+	ctx.body = {
+		code: 0,
+		data: cardinfo.data
+	};
+});
+
 
 // // 获取码
 // route.all('result2', async ctx => {

@@ -131,13 +131,22 @@ async function fullScreenshot(link, mobile, num) {
         // const totalTime = 4 * 1000
         let totalNum = parseInt(totalTime / eachTime)
         let paid = false
+        let isset = false
         for (let index = 0; index < totalNum; index++) {
             const payres = await page.waitForResponse(response => response.url().indexOf("get_order_state") > -1 && response.status() === 200);
             const json = await payres.json()
             if (json.data.code == 0) {
+                let payresPostdata = payres.postData()
+                let ordernum = payresPostdata.split("=")[1]
                 paid = true
-                redis.client.setex(`paid:${mobile}`, 9 * 60, "1");
+                redis.client.setex(`paid:${mobile}`, 9 * 60, `${ordernum}|1`);
                 break
+            }
+            if (!isset) {
+                let payresPostdata = payres.postData()
+                let ordernum = payresPostdata.split("=")[1]
+                redis.client.setex(`paid:${mobile}`, 9 * 60, `${ordernum}|0`);
+                isset = true
             }
             process.send({
                 index,
