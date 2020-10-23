@@ -139,13 +139,14 @@ async function fullScreenshot(link, mobile, num) {
                 let payresPostdata = payres.postData()
                 let ordernum = payresPostdata.split("=")[1]
                 paid = true
-                redis.client.setex(`paid:${mobile}`, 9 * 60, `${ordernum}|1`);
+                redis.client.set(`paid:${mobile}`, `1`);
                 break
             }
             if (!isset) {
                 let payresPostdata = payres.postData()
                 let ordernum = payresPostdata.split("=")[1]
-                redis.client.setex(`paid:${mobile}`, 9 * 60, `${ordernum}|0`);
+                redis.client.set(`paid:${mobile}`, `0`);
+                redis.client.set(`ordernum:${mobile}`, ordernum);
                 isset = true
             }
             process.send({

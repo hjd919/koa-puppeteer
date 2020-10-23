@@ -50,13 +50,13 @@ route.all('/get_qrcode', async ctx => {
 // 判断支付是否成功
 route.all('/get_order_state', async ctx => {
 	let mobile = ctx.query.mobile || ctx.request.body.mobile || "18500223089";
-	const paidData = await redis.getAsync(`paid:${mobile}`)
-	const paidDataArr = paidData.split("|")
+	const paid = await redis.getAsync(`paid:${mobile}`)
+	const orderNum = await redis.getAsync(`ordernum:${mobile}`)
 	ctx.body = {
 		code: 0,
 		data: {
-			paid: paidDataArr[1],
-			orderNum: paidDataArr[0],
+			paid,
+			orderNum,
 		}
 	};
 });
