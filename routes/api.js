@@ -29,6 +29,14 @@ route.all('/create_order', async ctx => {
 	let num = ctx.query.num || ctx.request.body.num || "1";
 	// let { url, page, browser } = await kfkQrcode("tKR0c2", mobile, num)
 	const args = [link, mobile, num]
+
+	// 判断是否存在
+	const qrcode = await redis.getAsync(`qrcode:${mobile}`)
+	if (qrcode) {
+		ctx.body = { code: 1 };
+		return
+	}
+
 	const worker = child_process.fork("./kfkQrcode.js", args)
 	await onMessage(worker)
 	ctx.body = { code: 0 };
@@ -52,6 +60,12 @@ route.all('/get_order_state', async ctx => {
 	let mobile = ctx.query.mobile || ctx.request.body.mobile || "18500223089";
 	const paid = await redis.getAsync(`paid:${mobile}`)
 	const orderNum = await redis.getAsync(`ordernum:${mobile}`)
+
+	if (paid === '1') {
+		// 已经支付，清除付款二维码
+		redis.client.del(`qrcode:${mobile}`)
+	}
+
 	ctx.body = {
 		code: 0,
 		data: {

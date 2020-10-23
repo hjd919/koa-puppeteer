@@ -40,7 +40,7 @@ fullScreenshot(link, mobile, num)
 async function fullScreenshot(link, mobile, num) {
     const browser = await puppeteer.launch({
         ignoreHTTPSErrors: true,
-        headless: false,
+        headless: true,
         // slowMo: 0,
         ignoreDefaultArgs: ["--enable-automation"],
         args: [
@@ -123,10 +123,10 @@ async function fullScreenshot(link, mobile, num) {
         process.send({
             qrcode
         });
-        redis.client.setex(`qrcode:${mobile}`, 9 * 60, qrcode);
+        redis.client.setex(`qrcode:${mobile}`, 5 * 60, qrcode);
 
         const eachTime = 3 * 1000
-        const totalTime = 4 * 60 * 1000
+        const totalTime = 5 * 60 * 1000
         // const eachTime = 2 * 1000
         // const totalTime = 4 * 1000
         let totalNum = parseInt(totalTime / eachTime)
@@ -143,7 +143,7 @@ async function fullScreenshot(link, mobile, num) {
                 break
             }
             if (!isset) {
-                let payresPostdata = payres.postData()
+                let payresPostdata = payres.request().postData()
                 let ordernum = payresPostdata.split("=")[1]
                 redis.client.set(`paid:${mobile}`, `0`);
                 redis.client.set(`ordernum:${mobile}`, ordernum);
