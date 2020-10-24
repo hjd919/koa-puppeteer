@@ -1,12 +1,22 @@
 var rediz = require('redis');
-const host = "153.36.108.72"
-const port = "6379"
-// const password = "Yisai726"
+const host = "39.96.187.72"
+const port = "4379"
+const password = "Xiaozi527"
+const db = 6
 
-var client = rediz.createClient({ "host": host, "port": port });
-client.on('error', function (err) { console.log('errorevent - ' + client.host + ':' + client.port + ' - ' + err); });
+var client = rediz.createClient({
+    host,
+    port,
+    password,
+    db
+});
+client.on('error', function(err) {
+    console.log('errorevent - ' + client.host + ':' + client.port + ' - ' + err);
+});
 
-const { promisify } = require("util");
+const {
+    promisify
+} = require("util");
 const getAsync = promisify(client.get).bind(client);
 
 module.exports = {

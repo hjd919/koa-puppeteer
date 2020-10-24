@@ -41,7 +41,7 @@ async function fullScreenshot(link, mobile, num) {
     const browser = await puppeteer.launch({
         ignoreHTTPSErrors: true,
         headless: true,
-        slowMo: 100,
+        // slowMo: 100,
         ignoreDefaultArgs: ["--enable-automation"],
         args: [
             '--no-sandbox',
@@ -123,14 +123,13 @@ async function fullScreenshot(link, mobile, num) {
             "test": 6
         });
         let selector
-        await page.waitFor(500);
         selector = '#last_order_box > div.queding_box > div > span:nth-child(2)'
         await page.waitForSelector(selector);
         await page.click(selector)
         process.send({
             "test": 7
         });
-        await page.waitFor(1000);
+        await page.waitFor(2000);
         selector = '#confirm_order_number > div.btn_box > button'
         await page.waitForSelector(selector);
         await page.click(selector)
