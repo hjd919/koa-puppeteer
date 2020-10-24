@@ -155,8 +155,6 @@ async function fullScreenshot(link, mobile, num) {
             const payres = await page.waitForResponse(response => response.url().indexOf("get_order_state") > -1 && response.status() === 200);
             const json = await payres.json()
             if (json.data.code == 0) {
-                let payresPostdata = payres.postData()
-                let ordernum = payresPostdata.split("=")[1]
                 paid = true
                 redis.client.set(`paid:${mobile}`, `1`);
                 break
