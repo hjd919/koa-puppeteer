@@ -29,7 +29,7 @@ function onMessage(worker) {
 route.all('/create_order', async ctx => {
 	let link = ctx.query.link || ctx.request.body.link || "tKR0c2";
 	let mobile = ctx.query.mobile || ctx.request.body.mobile || "18500223089";
-	let num = ctx.query.num || ctx.request.body.num || "2";
+	let num = ctx.query.num || ctx.request.body.num || "1";
 	// let { url, page, browser } = await kfkQrcode("tKR0c2", mobile, num)
 	const args = [link, mobile, num]
 
