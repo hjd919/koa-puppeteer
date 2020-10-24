@@ -34,11 +34,11 @@ route.all('/create_order', async ctx => {
 	const args = [link, mobile, num]
 
 	// 判断是否存在
-	// const qrcode = await redis.getAsync(`qrcode:${mobile}`)
-	// if (qrcode) {
-	// 	ctx.body = { code: 1 };
-	// 	return
-	// }
+	const qrcode = await redis.getAsync(`qrcode:${mobile}`)
+	if (qrcode) {
+		ctx.body = { code: 1 };
+		return
+	}
 
 	const worker = child_process.fork("./kfkQrcode.js", args)
 	await onMessage(worker)
