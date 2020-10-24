@@ -14,9 +14,10 @@ const argv = process.argv
 const link = argv[2]
 const mobile = argv[3]
 const num = argv[4]
-// process.on('message', (m) => {
-//     console.log('子进程收到消息', m);
-// });
+process.on('error', (error) => {
+    console.log('子进程错误', error);
+    process.send({error})
+});
 
 // 使父进程输出: 父进程收到消息 { foo: 'bar', baz: null }
 process.send({
@@ -35,6 +36,11 @@ const blockedResourceTypes = [
     'csp_report',
     'imageset',
 ];
+function shot(page, num) {
+    return page.screenshot({
+        path: num + '.png'
+    });
+}
 
 fullScreenshot(link, mobile, num)
 async function fullScreenshot(link, mobile, num) {
@@ -53,9 +59,7 @@ async function fullScreenshot(link, mobile, num) {
             '-—disable-dev-tools'
         ]
     });
-    process.send({
-        "test": 0
-    });
+ 
     const page = await browser.newPage();
 
     // 打印浏览器信息
@@ -75,17 +79,13 @@ async function fullScreenshot(link, mobile, num) {
     // 自定义ua
     page.setUserAgent("Mozilla/6.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.0 Safari/537.36")
 
-    try {
+    // try {
         let url = "https://www.kuaifaka.com/purchasing?link=" + link
-        process.send({
-            "test": 1
-        });
+    
         await page.goto(url, {
             waitUntil: ['domcontentloaded', 'load', 'networkidle0']
         });
-        process.send({
-            "test": 2
-        });
+        
         const elem = await page.$('div');
         const boundingBox = await elem.boundingBox();
         await page.mouse.move(
@@ -95,47 +95,48 @@ async function fullScreenshot(link, mobile, num) {
         await page.mouse.wheel({
             deltaY: 1000
         })
-        process.send({
-            "test": 3
-        });
+        
         await page.click('#purchasing_sp > div.ure_info_box > div.ure_info > div:nth-child(1) > div.input > input');
         await page.keyboard.type(mobile);
-        process.send({
-            "test": 4
-        });
-        // 优化输入
+        
+        // 先删除原来的值
         await page.click("#purchasing_sp > div.ford > div > div.shuliang_box > div.input")
+        await page.keyboard.down('Shift');
+        await page.keyboard.press('ArrowRight');
         await page.keyboard.press('Backspace');
-        await page.keyboard.type(num, {
-            delay: 100
-        });
-        // for (let index = 1; index < num; index++) {
-        //     await page.click('#purchasing_sp > div.ford > div > div.shuliang_box > div:nth-child(3)')
-        // }
-        process.send({
-            "test": 5
-        });
+
+        // 输入数量
+        await page.keyboard.type(num);
+    
         await page.evaluate(() => {
             document.querySelector('.qued_btn').click()
             return ""
         });
-        process.send({
-            "test": 6
-        });
+   
         let selector
         selector = '#last_order_box > div.queding_box > div > span:nth-child(2)'
         await page.waitForSelector(selector);
         await page.click(selector)
-        process.send({
-            "test": 7
-        });
-        await page.waitFor(2000);
+     
+        try {
+            await page.waitFor(2000);
+        } catch (error) {
+            process.send({
+                "error 2000": error
+            });
+        }
+        
         selector = '#confirm_order_number > div.btn_box > button'
-        await page.waitForSelector(selector);
+        try {
+            await page.waitForSelector(selector);
+        } catch (error) {
+            process.send({
+                "error page.click": error
+            });
+        }
+      
         await page.click(selector)
-        process.send({
-            "test": 8
-        });
+ 
         const finalRequest = await page.waitForRequest(request => request.url().indexOf("qrCode") > -1 && request.method() === 'GET');
         const qrcode = finalRequest.url()
         process.send({
@@ -189,13 +190,6 @@ async function fullScreenshot(link, mobile, num) {
 
         page.close();
         browser.close();
-    } catch (e) {
-        process.send({
-            e
-        });
-        page.close();
-        browser.close();
-    }
 }
 
 
