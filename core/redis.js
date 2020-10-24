@@ -1,5 +1,9 @@
 var rediz = require('redis');
-var client = rediz.createClient({ "host": "39.96.187.72", "port": "4379", password: 'Xiaozi527' });
+const host = "153.36.108.72"
+const port = "6379"
+// const password = "Yisai726"
+
+var client = rediz.createClient({ "host": host, "port": port });
 client.on('error', function (err) { console.log('errorevent - ' + client.host + ':' + client.port + ' - ' + err); });
 
 const { promisify } = require("util");

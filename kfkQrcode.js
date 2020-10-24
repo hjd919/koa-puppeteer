@@ -41,7 +41,7 @@ async function fullScreenshot(link, mobile, num) {
     const browser = await puppeteer.launch({
         ignoreHTTPSErrors: true,
         headless: true,
-        // slowMo: 0,
+        slowMo: 100,
         ignoreDefaultArgs: ["--enable-automation"],
         args: [
             '--no-sandbox',
@@ -53,7 +53,9 @@ async function fullScreenshot(link, mobile, num) {
             '-—disable-dev-tools'
         ]
     });
-
+    process.send({
+        "test": 0
+    });
     const page = await browser.newPage();
 
     // 打印浏览器信息
@@ -75,10 +77,15 @@ async function fullScreenshot(link, mobile, num) {
 
     try {
         let url = "https://www.kuaifaka.com/purchasing?link=" + link
+        process.send({
+            "test": 1
+        });
         await page.goto(url, {
             waitUntil: ['domcontentloaded', 'load', 'networkidle0']
         });
-
+        process.send({
+            "test": 2
+        });
         const elem = await page.$('div');
         const boundingBox = await elem.boundingBox();
         await page.mouse.move(
@@ -88,10 +95,14 @@ async function fullScreenshot(link, mobile, num) {
         await page.mouse.wheel({
             deltaY: 1000
         })
-
+        process.send({
+            "test": 3
+        });
         await page.click('#purchasing_sp > div.ure_info_box > div.ure_info > div:nth-child(1) > div.input > input');
         await page.keyboard.type(mobile);
-
+        process.send({
+            "test": 4
+        });
         // 优化输入
         await page.click("#purchasing_sp > div.ford > div > div.shuliang_box > div.input")
         await page.keyboard.press('Backspace');
@@ -101,23 +112,31 @@ async function fullScreenshot(link, mobile, num) {
         // for (let index = 1; index < num; index++) {
         //     await page.click('#purchasing_sp > div.ford > div > div.shuliang_box > div:nth-child(3)')
         // }
-
+        process.send({
+            "test": 5
+        });
         await page.evaluate(() => {
             document.querySelector('.qued_btn').click()
             return ""
         });
-
+        process.send({
+            "test": 6
+        });
         let selector
-        // await page.waitFor(500);
+        await page.waitFor(500);
         selector = '#last_order_box > div.queding_box > div > span:nth-child(2)'
         await page.waitForSelector(selector);
         await page.click(selector)
-
-        await page.waitFor(2000);
+        process.send({
+            "test": 7
+        });
+        await page.waitFor(1000);
         selector = '#confirm_order_number > div.btn_box > button'
         await page.waitForSelector(selector);
         await page.click(selector)
-
+        process.send({
+            "test": 8
+        });
         const finalRequest = await page.waitForRequest(request => request.url().indexOf("qrCode") > -1 && request.method() === 'GET');
         const qrcode = finalRequest.url()
         process.send({
