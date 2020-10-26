@@ -11,18 +11,21 @@ const redis = require('./core/redis');
 // cookie.setCookie(mobile, cookie)
 
 const argv = process.argv
-const link = argv[2]
-const mobile = argv[3]
-const num = argv[4]
+const link = argv[2] || "tKR0c2"
+const mobile = argv[3] || "18500223089"
+const num = argv[4] || 1
+const ua = argv[5] || "Mozilla/6.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.0 Safari/537.36"
+
+process.send = process.send || function () { };
+
 process.on('error', (error) => {
-    console.log('子进程错误', error);
-    process.send({
+    send({
         error
     })
 });
 
 // 使父进程输出: 父进程收到消息 { foo: 'bar', baz: null }
-process.send({
+send({
     link,
     mobile,
     num
@@ -39,14 +42,19 @@ const blockedResourceTypes = [
     'imageset',
 ];
 
+function send(msg) {
+    process.send(msg)
+}
+
 function shot(page, num) {
     return page.screenshot({
         path: num + '.png'
     });
 }
 
-fullScreenshot(link, mobile, num)
-async function fullScreenshot(link, mobile, num) {
+fullScreenshot(link, mobile, num, ua)
+
+async function fullScreenshot(link, mobile, num, ua) {
     const browser = await puppeteer.launch({
         ignoreHTTPSErrors: true,
         headless: true,
@@ -80,7 +88,7 @@ async function fullScreenshot(link, mobile, num) {
     });
 
     // 自定义ua
-    page.setUserAgent("Mozilla/6.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.0 Safari/537.36")
+    page.setUserAgent(ua)
 
     // try {
     let url = "https://www.kuaifaka.com/purchasing?link=" + link
@@ -126,7 +134,7 @@ async function fullScreenshot(link, mobile, num) {
     try {
         await page.waitForSelector(selector);
     } catch (error) {
-        process.send({
+        send({
             "error page.click": error
         });
     }
@@ -135,7 +143,7 @@ async function fullScreenshot(link, mobile, num) {
 
     const finalRequest = await page.waitForRequest(request => request.url().indexOf("qrCode") > -1 && request.method() === 'GET');
     const qrcode = finalRequest.url()
-    process.send({
+    send({
         qrcode
     });
     redis.client.setex(`qrcode:${mobile}`, 5 * 60, qrcode);
@@ -152,7 +160,7 @@ async function fullScreenshot(link, mobile, num) {
         const json = await payres.json()
         if (!json) {
             let errcontent = await payres.text()
-            process.send({
+            send({
                 errcontent
             });
             break
@@ -169,13 +177,13 @@ async function fullScreenshot(link, mobile, num) {
             redis.client.set(`ordernum:${mobile}`, ordernum);
             isset = true
         }
-        process.send({
+        send({
             index,
             json
         });
     }
 
-    process.send({
+    send({
         paid
     });
 
