@@ -9,6 +9,7 @@ const child_process = require('child_process');
 const screenshot = require('../core/screenshot')
 const pdf = require('../core/pdf')
 const render = require('../core/render')
+const kfk = require('../kfk')
 const redis = require('../core/redis')
 
 function onMessage(worker) {
@@ -20,10 +21,18 @@ function onMessage(worker) {
 			console.log('父进程收到消息', m);
 		});
 		worker.on('error', (err) => {
-			console.log('子进程收到消息',err);
+			console.log('子进程收到消息', err);
 		});
 	})
 }
+
+// 获取配置
+route.all('/config', async ctx => {
+	ctx.body = {
+		code: 0,
+		data: kfk
+	};
+});
 
 // 创建订单
 route.all('/create_order', async ctx => {
@@ -36,13 +45,17 @@ route.all('/create_order', async ctx => {
 	// 判断是否存在
 	const qrcode = await redis.getAsync(`qrcode:${mobile}`)
 	if (qrcode) {
-		ctx.body = { code: 1 };
+		ctx.body = {
+			code: 1
+		};
 		return
 	}
 
 	const worker = child_process.fork("./kfkQrcode.js", args)
 	await onMessage(worker)
-	ctx.body = { code: 0 };
+	ctx.body = {
+		code: 0
+	};
 });
 
 // 判断支付是否成功
