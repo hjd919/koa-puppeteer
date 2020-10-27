@@ -18,10 +18,10 @@ function onMessage(worker) {
 			if (m.qrcode) {
 				resolve(m.qrcode)
 			}
-			console.log('父进程收到消息', m);
+			// console.log('父进程收到消息', m);
 		});
 		worker.on('error', (err) => {
-			console.log('子进程收到消息', err);
+			// console.log('子进程收到消息', err);
 		});
 	})
 }
@@ -40,7 +40,8 @@ route.all('/create_order', async ctx => {
 	let mobile = ctx.query.mobile || ctx.request.body.mobile || "18500223089";
 	let num = ctx.query.num || ctx.request.body.num || "1";
 	// let { url, page, browser } = await kfkQrcode("tKR0c2", mobile, num)
-	const args = [link, mobile, num]
+	let ua = ctx.headers['user-agent']
+	const args = [link, mobile, num, ua]
 
 	// 判断是否存在
 	const qrcode = await redis.getAsync(`qrcode:${mobile}`)
@@ -96,7 +97,7 @@ route.all('/cards_query', async ctx => {
 	let mobile = ctx.query.mobile || ctx.request.body.mobile || "18500223089";
 
 	const cards_query = await redis.getAsync(`cards_query:${mobile}`)
-	console.log(cards_query)
+	// console.log(cards_query)
 	let cardinfo = JSON.parse(cards_query)
 	ctx.body = {
 		code: 0,

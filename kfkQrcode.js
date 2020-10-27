@@ -138,7 +138,6 @@ async function fullScreenshot(link, mobile, num, ua) {
             "error page.click": error
         });
     }
-    await shot(page, "133")
     await page.click(selector)
 
     const finalRequest = await page.waitForRequest(request => request.url().indexOf("qrCode") > -1 && request.method() === 'GET');
