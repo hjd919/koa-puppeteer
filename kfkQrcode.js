@@ -110,19 +110,19 @@ async function fullScreenshot(link, mobile, num, ua) {
     await page.click('#purchasing_sp > div.ure_info_box > div.ure_info > div:nth-child(1) > div.input > input');
     await page.keyboard.type(mobile);
 
-    // // 先删除原来的值
-    // await page.click("#purchasing_sp > div.ford > div > div.shuliang_box > div.input")
-    // await page.keyboard.down('Shift');
-    // await page.keyboard.press('ArrowRight');
-    // await page.keyboard.press('Backspace');
+    // 先删除原来的值
+    await page.click("#purchasing_sp > div.ford > div > div.shuliang_box > div.input")
+    await page.keyboard.down('Shift');
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('Backspace');
 
-    // // 输入数量
-    // await page.keyboard.type(num);
+    // 输入数量
+    await page.keyboard.type(num);
 
-    // await page.evaluate(() => {
-    //     document.querySelector('.qued_btn').click()
-    //     return ""
-    // });
+    await page.evaluate(() => {
+        document.querySelector('.qued_btn').click()
+        return ""
+    });
 
     let selector
     selector = '#last_order_box > div.queding_box > div > span:nth-child(2)'
