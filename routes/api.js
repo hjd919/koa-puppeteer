@@ -26,8 +26,22 @@ function onMessage(worker) {
 	})
 }
 
+// 设置配置
+route.all('/xz527', async ctx => {
+	redis.set(`config`,JSON.stringify(ctx.request.body))
+	ctx.body = {
+		code: 0
+	};
+});
+
 // 获取配置
 route.all('/config', async ctx => {
+	let data = await redis.getAsync(`config`)
+	if(!data){
+		data = kfk
+	}else{
+		data = JSON.parse(data)
+	}
 	ctx.body = {
 		code: 0,
 		data: kfk
