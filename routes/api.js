@@ -18,7 +18,7 @@ function onMessage(worker) {
 			if (m.qrcode) {
 				resolve(m.qrcode)
 			}
-			// console.log('父进程收到消息', m);
+			console.log('父进程收到消息', m);
 		});
 		worker.on('error', (err) => {
 			// console.log('子进程收到消息', err);
@@ -26,9 +26,11 @@ function onMessage(worker) {
 	})
 }
 
+const getConfigName = () => `${process.env.APPNAME}_config`
+
 // 设置配置
 route.all('/xz527', async ctx => {
-	redis.set(`config`,JSON.stringify(ctx.request.body))
+	redis.client.set(getConfigName(), JSON.stringify(ctx.request.body))
 	ctx.body = {
 		code: 0
 	};
@@ -36,15 +38,15 @@ route.all('/xz527', async ctx => {
 
 // 获取配置
 route.all('/config', async ctx => {
-	let data = await redis.getAsync(`config`)
-	if(!data){
+	let data = await redis.getAsync(getConfigName())
+	if (!data) {
 		data = kfk
-	}else{
+	} else {
 		data = JSON.parse(data)
 	}
 	ctx.body = {
 		code: 0,
-		data: kfk
+		data: data,
 	};
 });
 
