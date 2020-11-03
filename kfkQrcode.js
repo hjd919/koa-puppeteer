@@ -83,10 +83,10 @@ async function fullScreenshot(link, mobile, num, ua) {
         ignoreHTTPSErrors: true,
         headless: true,
         // slowMo: 100,
-        // defaultViewport: {
-        //     width: 1920,
-        //     height: 1080
-        // },
+        defaultViewport: {
+            width: 1920,
+            height: 1080
+        },
         ignoreDefaultArgs: ["--enable-automation"],
         args: [
             '--no-sandbox',
