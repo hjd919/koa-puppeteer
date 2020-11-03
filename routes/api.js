@@ -27,6 +27,21 @@ function onMessage(worker) {
 }
 
 // 获取配置
+route.all('/queryOrder', async ctx => {
+	let mobile = ctx.query.mobile || ctx.request.body.mobile;
+	const cards_query = await redis.getAsync(`cards_query:${mobile}`)
+	if(cards_query){
+		ctx.body = {
+			code: 1
+		};
+		return
+	}
+	ctx.body = {
+		code: 0
+	};
+});
+
+// 获取配置
 route.all('/config', async ctx => {
 	ctx.body = {
 		code: 0,
@@ -37,7 +52,7 @@ route.all('/config', async ctx => {
 // 创建订单
 route.all('/create_order', async ctx => {
 	let link = ctx.query.link || ctx.request.body.link || "tKR0c2";
-	let mobile = ctx.query.mobile || ctx.request.body.mobile || "18500223089";
+	let mobile = ctx.query.mobile || ctx.request.body.mobile;
 	let num = ctx.query.num || ctx.request.body.num || "1";
 	// let { url, page, browser } = await kfkQrcode("tKR0c2", mobile, num)
 	let ua = ctx.headers['user-agent']
@@ -61,7 +76,7 @@ route.all('/create_order', async ctx => {
 
 // 判断支付是否成功
 route.all('/get_qrcode', async ctx => {
-	let mobile = ctx.query.mobile || ctx.request.body.mobile || "18500223089";
+	let mobile = ctx.query.mobile || ctx.request.body.mobile;
 	const qrcode = await redis.getAsync(`qrcode:${mobile}`)
 	// const paidDataArr = paidData.split("|")
 	ctx.body = {
@@ -74,7 +89,7 @@ route.all('/get_qrcode', async ctx => {
 
 // 判断支付是否成功
 route.all('/get_order_state', async ctx => {
-	let mobile = ctx.query.mobile || ctx.request.body.mobile || "18500223089";
+	let mobile = ctx.query.mobile || ctx.request.body.mobile;
 	const paid = await redis.getAsync(`paid:${mobile}`)
 	const orderNum = await redis.getAsync(`ordernum:${mobile}`)
 

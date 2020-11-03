@@ -10,13 +10,29 @@ const redis = require('./core/redis');
 // const cookie = await page.cookies()
 // cookie.setCookie(mobile, cookie)
 
+// 延时器
+// let timeout = function (delay) {
+//     console.log('延迟函数：', `延迟 ${delay} 毫秒`)
+//     return new Promise((resolve, reject) => {
+//       setTimeout(() => {
+//         try {
+//           resolve(1)
+//         } catch (error) {
+//           reject(error)
+//         }
+//       }, delay);
+//     })
+//   }
+//   await timeout(1000);
+
+
 const argv = process.argv
 const link = argv[2] || "tKR0c2"
 const mobile = argv[3] || "18500223089"
 const num = argv[4] || 1
 const ua = argv[5] || "Mozilla/6.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.0 Safari/537.36"
 
-process.send = process.send || function () { };
+process.send = process.send || function() {};
 
 process.on('error', (error) => {
     send({
@@ -57,7 +73,7 @@ fullScreenshot(link, mobile, num, ua)
 async function fullScreenshot(link, mobile, num, ua) {
     const browser = await puppeteer.launch({
         ignoreHTTPSErrors: true,
-        headless: true,
+        headless: false,
         // slowMo: 100,
         ignoreDefaultArgs: ["--enable-automation"],
         args: [
@@ -111,13 +127,13 @@ async function fullScreenshot(link, mobile, num, ua) {
     await page.keyboard.type(mobile);
 
     // 先删除原来的值
-    await page.click("#purchasing_sp > div.ford > div > div.shuliang_box > div.input")
-    await page.keyboard.down('Shift');
-    await page.keyboard.press('ArrowRight');
-    await page.keyboard.press('Backspace');
+    // await page.click("#purchasing_sp > div.ford > div > div.shuliang_box > div.input")
+    // await page.keyboard.down('Shift');
+    // await page.keyboard.press('ArrowRight');
+    // await page.keyboard.press('Backspace');
 
-    // 输入数量
-    await page.keyboard.type(num);
+    // // 输入数量
+    // await page.keyboard.type(num);
 
     await page.evaluate(() => {
         document.querySelector('.qued_btn').click()
@@ -125,11 +141,18 @@ async function fullScreenshot(link, mobile, num, ua) {
     });
 
     let selector
-    selector = '#last_order_box > div.queding_box > div > span:nth-child(2)'
-    await page.waitForSelector(selector);
-    await page.click(selector)
+    try {
+        selector = '#last_order_box > div.queding_box > div > span:nth-child(2)'
+        await page.waitForSelector(selector);
+        await page.click(selector)
+    } catch (e) {
+        if (e instanceof TimeoutError) {
+            // 如果超时，做一些处理。
+        }
+    }
 
-    await page.waitFor(2000);
+    // await page.waitFor(2000);
+    await page.waitForResponse(response => response.url().indexOf("create_order_num") > -1 && response.status() === 200);
     selector = '#confirm_order_number > div.btn_box > button'
     try {
         await page.waitForSelector(selector);
@@ -137,6 +160,10 @@ async function fullScreenshot(link, mobile, num, ua) {
         send({
             "error page.click": error
         });
+        console.error("waitForSelector err")
+        page.close();
+        browser.close();
+        return
     }
     await page.click(selector)
 
