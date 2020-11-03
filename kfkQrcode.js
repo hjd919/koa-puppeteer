@@ -81,12 +81,12 @@ fullScreenshot(link, mobile, num, ua)
 async function fullScreenshot(link, mobile, num, ua) {
     const browser = await puppeteer.launch({
         ignoreHTTPSErrors: true,
-        headless: false,
+        headless: true,
         // slowMo: 100,
-        defaultViewport: {
-            width: 1920,
-            height: 1080
-        },
+        // defaultViewport: {
+        //     width: 1920,
+        //     height: 1080
+        // },
         ignoreDefaultArgs: ["--enable-automation"],
         args: [
             '--no-sandbox',
@@ -138,12 +138,10 @@ async function fullScreenshot(link, mobile, num, ua) {
     await page.mouse.wheel({
         deltaY: 1000
     })
-    shot(page, 2)
 
     // 输入手机号
     await page.click('#purchasing_sp > div.ure_info_box > div.ure_info > div:nth-child(1) > div.input > input');
     await page.keyboard.type(mobile);
-    shot(page, 3)
 
     // 确认订单
     selector = 'div.qued_btn'
@@ -153,7 +151,6 @@ async function fullScreenshot(link, mobile, num, ua) {
     //     document.querySelector('.qued_btn').click()
     //     return ""
     // });
-    shot(page, 4)
 
     // // 先删除原来的值
     // await page.click("#purchasing_sp > div.ford > div > div.shuliang_box > div.input")
@@ -171,7 +168,6 @@ async function fullScreenshot(link, mobile, num, ua) {
     // await page.waitFor(2000);
     // 点击创建支付
     await page.waitForResponse(response => response.url().indexOf("create_order_num") > -1 && response.status() === 200);
-    shot(page, 5)
     selector = '#confirm_order_number > div.btn_box > button'
     try {
         await page.waitForSelector(selector);
@@ -183,7 +179,6 @@ async function fullScreenshot(link, mobile, num, ua) {
         page.close();
         browser.close();
     }
-    shot(page, 6)
     await page.click(selector)
 
     const finalRequest = await page.waitForRequest(request => request.url().indexOf("qrCode") > -1 && request.method() === 'GET');
