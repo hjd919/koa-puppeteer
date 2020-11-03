@@ -1,5 +1,5 @@
 var rediz = require('redis');
-const host = "172.21.16.12"
+const host = "redis"
 const port = "6379"
 const password = "Xiaozi527"
 const db = 0
