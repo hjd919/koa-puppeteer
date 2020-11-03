@@ -15,7 +15,8 @@ const argv = process.argv
 const link = argv[2] || "tKR0c2"
 const mobile = argv[3] || "18500223089"
 const num = argv[4] || 1
-const ua = argv[5] || "Mozilla/6.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.0 Safari/537.36"
+// const ua = argv[5] || "Mozilla/6.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.0 Safari/537.36"
+const ua = "Mozilla/6.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.0 Safari/537.36"
 
 process.send = process.send || function () { };
 
