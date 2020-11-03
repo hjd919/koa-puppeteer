@@ -1,6 +1,7 @@
 'use strict';
 
 const puppeteer = require('puppeteer');
+// const {TimeoutError} = require('puppeteer/Errors');
 const redis = require('./core/redis');
 // const cookie = require('./cookie');
 // get cookie
@@ -59,13 +60,19 @@ const blockedResourceTypes = [
 ];
 
 function send(msg) {
-    process.send(msg)
+    // console.log('父进程收到消息', msg);
+    if (msg.qrcode) {
+        process.send(msg)
+    } else {
+        // process.send(msg)
+    }
 }
 
 function shot(page, num) {
-    return page.screenshot({
-        path: num + '.png'
-    });
+    return false
+    // return page.screenshot({
+    //     path: num + '.png'
+    // });
 }
 
 fullScreenshot(link, mobile, num, ua)
@@ -75,6 +82,10 @@ async function fullScreenshot(link, mobile, num, ua) {
         ignoreHTTPSErrors: true,
         headless: false,
         // slowMo: 100,
+        defaultViewport: {
+            width: 1920,
+            height: 1080
+        },
         ignoreDefaultArgs: ["--enable-automation"],
         args: [
             '--no-sandbox',
@@ -91,7 +102,6 @@ async function fullScreenshot(link, mobile, num, ua) {
 
     // 打印浏览器信息
     // page.on('console', msg => console.log('PAGE LOG:', msg.text()));
-
     // 根据请求类型过滤
     page.setRequestInterception(true)
     page.on('request', async req => {
@@ -105,16 +115,21 @@ async function fullScreenshot(link, mobile, num, ua) {
 
     // 自定义ua
     page.setUserAgent(ua)
-
     // try {
     let url = "https://www.kuaifaka.com/purchasing?link=" + link
+    let selector
 
+    // console.log("url", url)
+    // await page.goto(url);
+    // await page.waitForResponse(response => response.url().indexOf("get_order_price") > -1 && response.status() === 200);
     await page.goto(url, {
         waitUntil: ['domcontentloaded', 'load', 'networkidle0']
     });
 
+    // 下拉
     const elem = await page.$('div');
     const boundingBox = await elem.boundingBox();
+    send({ boundingBox })
     await page.mouse.move(
         boundingBox.x + boundingBox.width / 2,
         boundingBox.y + boundingBox.height / 2
@@ -122,11 +137,24 @@ async function fullScreenshot(link, mobile, num, ua) {
     await page.mouse.wheel({
         deltaY: 1000
     })
+    shot(page, 2)
 
+    // 输入手机号
     await page.click('#purchasing_sp > div.ure_info_box > div.ure_info > div:nth-child(1) > div.input > input');
     await page.keyboard.type(mobile);
+    shot(page, 3)
 
-    // 先删除原来的值
+    // 确认订单
+    selector = 'div.qued_btn'
+    await page.waitForSelector(selector);
+    await page.click(selector);
+    // await page.evaluate(() => {
+    //     document.querySelector('.qued_btn').click()
+    //     return ""
+    // });
+    shot(page, 4)
+
+    // // 先删除原来的值
     // await page.click("#purchasing_sp > div.ford > div > div.shuliang_box > div.input")
     // await page.keyboard.down('Shift');
     // await page.keyboard.press('ArrowRight');
@@ -135,24 +163,14 @@ async function fullScreenshot(link, mobile, num, ua) {
     // // 输入数量
     // await page.keyboard.type(num);
 
-    await page.evaluate(() => {
-        document.querySelector('.qued_btn').click()
-        return ""
-    });
-
-    let selector
-    try {
-        selector = '#last_order_box > div.queding_box > div > span:nth-child(2)'
-        await page.waitForSelector(selector);
-        await page.click(selector)
-    } catch (e) {
-        if (e instanceof TimeoutError) {
-            // 如果超时，做一些处理。
-        }
-    }
+    // selector = '#last_order_box > div.queding_box > div > span:nth-child(2)'
+    // await page.waitForSelector(selector);
+    // await page.click(selector)
 
     // await page.waitFor(2000);
+    // 点击创建支付
     await page.waitForResponse(response => response.url().indexOf("create_order_num") > -1 && response.status() === 200);
+    shot(page, 5)
     selector = '#confirm_order_number > div.btn_box > button'
     try {
         await page.waitForSelector(selector);
@@ -160,11 +178,11 @@ async function fullScreenshot(link, mobile, num, ua) {
         send({
             "error page.click": error
         });
-        console.error("waitForSelector err")
+        console.error(error)
         page.close();
         browser.close();
-        return
     }
+    shot(page, 6)
     await page.click(selector)
 
     const finalRequest = await page.waitForRequest(request => request.url().indexOf("qrCode") > -1 && request.method() === 'GET');

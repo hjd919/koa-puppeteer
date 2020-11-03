@@ -1,8 +1,8 @@
 var rediz = require('redis');
-const host = "39.96.187.72"
-const port = "4379"
+const host = "172.21.16.12"
+const port = "6379"
 const password = "Xiaozi527"
-const db = 6
+const db = 0
 
 var client = rediz.createClient({
     host,
